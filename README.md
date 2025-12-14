@@ -21,14 +21,46 @@
 
 ## <a name="Recon_on_wildcard_domain">🔹Recon on wildcard domain🔹</a>  
 
-- [ ] Run amass  
-- [ ] Run subfinder  
-- [ ] Run assetfinder  
-- [ ] Run dnsgen  
-- [ ] Run massdns  
-- [ ] Use httprobe  
-- [ ] Run aquatone (screenshot for alive host)  
+### 🔹subdomain recon  
 
+- [ ] amass
+```
+amass enum -passive -d tesla.com | grep -oE '([a-zA-Z0-9_-]+\.)+tesla\.com' | anew amass-subdomains.txt
+```
+- [ ] github-subdomains 
+``` 
+github-subdomains -d tesla.com -t $git_token -o github-subdomains.txt
+```
+- [ ] subfinder  
+```
+subfinder -d tesla.com -o subfinder.txt
+```
+- [ ] assetfinder  
+```
+assetfinder -subs-only tesla.com > assetfinder.txt 
+```
+- [ ] findomain
+```
+findomain -t tesla.com -u findomain.txt
+```
+
+- [ ] crt.sh  
+```
+curl -s -L -A "Mozilla/5.0" "https://crt.sh/?q=%.tesla.com" \
+| grep -oE "[a-zA-Z0-9._-]+\.tesla\.com" \
+| sed 's/\*\.//g' \
+| sort -u \
+| anew crt.txt
+```
+- [ ] web.archive
+```
+curl -s "http://web.archive.org/cdx/search/cdx?url=*.tesla.com/*&output=text&fl=original&collapse=urlkey" \
+| sed -E 's_https?://([^/]+)/.*_\1_' \
+| sort -u > web.archive.txt
+```
+```
+cat amass-subdomains.txt assetfinder.txt crt.txt findomain.txt github-subdomains.txt subfinder.txt web.archive.txt  | sort -u > subdomains.txt
+```
 
 ## <a name="Single_domain">🔹Single Domain🔹</a>  
 
