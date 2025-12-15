@@ -37,7 +37,7 @@ subfinder -d tesla.com -o subfinder.txt
 ```
 - [ ] assetfinder  
 ```
-assetfinder -subs-only tesla.com > assetfinder.txt 
+assetfinder -subs-only tesla.com | tee assetfinder.txt 
 ```
 - [ ] findomain
 ```
@@ -56,10 +56,85 @@ curl -s -L -A "Mozilla/5.0" "https://crt.sh/?q=%.tesla.com" \
 ```
 curl -s "http://web.archive.org/cdx/search/cdx?url=*.tesla.com/*&output=text&fl=original&collapse=urlkey" \
 | sed -E 's_https?://([^/]+)/.*_\1_' \
-| sort -u > web.archive.txt
+| sort -u | tee web.archive.txt
 ```
 ```
-cat amass-subdomains.txt assetfinder.txt crt.txt findomain.txt github-subdomains.txt subfinder.txt web.archive.txt  | sort -u > subdomains.txt
+cat *.txt | sort -u > subdomains.txt
+```
+
+## <a name="Single_domain">🔹subdomain takeover detection🔹</a> 
+
+### 🔹Scanning with auotmation tool 
+
+- [ ] subzy 
+```
+subzy run \
+  --targets subdomains.txt \
+  --timeout 40 \
+  --concurrency 20 \
+  --hide_fails \
+  --vuln \
+| tee subzy_takeovers.txt
+```
+
+- [ ] subjack
+```
+subjack \
+  -w subdomains.txt \
+  -t 30 \
+  -timeout 40 \
+  -ssl \
+  -a \
+  -m \
+  -c ~/tools/subjack/fingerprints.json \ 
+  -o subjack_takeovers.txt
+```   
+
+- [ ] nuclei
+```
+nuclei -tl | grep takeover 
+
+nuclei \
+  -l subdomains.txt \
+  -t ~/nuclei-templates/http/takeovers/ \
+  -timeout 10 \
+  -retries 2 \
+  -c 25 \
+  -rl 150 \
+  -severity high,critical \
+  -o http-takeovers.txt
+
+
+nuclei \
+  -l subdomains.txt \
+  -t ~/tools/nuclei-templates/detect-all-takeovers.yaml \
+  -timeout 10 \
+  -retries 2 \
+  -c 25 \
+  -rl 150 \
+  -o nuclei-takeover.txt
+```
+
+```
+cat subzy_takeovers.txt subjack_takeovers.txt | tee takeover-final.txt
+```
+
+- [ ] manual check with dig & curl 
+```
+curl -I -L -sS url8833.tesla.com
+
+dig +noall +answer url7661.tesla.com 
+
+dig +short CNAME_TARGET_HERE
+```
+🔹note🔹
+```
+A subdomain is vulnerable to takeover only if:
+
+✔️ Its CNAME points to a third-party service 
+✔️ That third-party service has an unclaimed account/page 
+✔️ Attacker can create an account there and claim/attach the domain 
+✔️ The service explicitly says the domain is available/free 
 ```
 
 ## <a name="Single_domain">🔹Single Domain🔹</a>  
