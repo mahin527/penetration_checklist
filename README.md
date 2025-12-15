@@ -62,7 +62,7 @@ curl -s "http://web.archive.org/cdx/search/cdx?url=*.tesla.com/*&output=text&fl=
 cat *.txt | sort -u > subdomains.txt
 ```
 
-## <a name="Single_domain">🔹subdomain takeover detection🔹</a> 
+## <a name="subdomain_takeover_detection">🔹Subdomain takeover detection🔹</a> 
 
 ### 🔹Scanning with auotmation tool 
 
@@ -93,7 +93,8 @@ subjack \
 - [ ] nuclei
 ```
 nuclei -tl | grep takeover 
-
+```
+```
 nuclei \
   -l subdomains.txt \
   -t ~/nuclei-templates/http/takeovers/ \
@@ -103,8 +104,8 @@ nuclei \
   -rl 150 \
   -severity high,critical \
   -o http-takeovers.txt
-
-
+```
+```
 nuclei \
   -l subdomains.txt \
   -t ~/tools/nuclei-templates/detect-all-takeovers.yaml \
@@ -122,9 +123,11 @@ cat subzy_takeovers.txt subjack_takeovers.txt | tee takeover-final.txt
 - [ ] manual check with dig & curl 
 ```
 curl -I -L -sS url8833.tesla.com
-
+```
+```
 dig +noall +answer url7661.tesla.com 
-
+```
+```
 dig +short CNAME_TARGET_HERE
 ```
 🔹note🔹
@@ -139,6 +142,48 @@ A subdomain is vulnerable to takeover only if:
 
 ## <a name="Single_domain">🔹Single Domain🔹</a>  
 
+## <a name="javascript_recon_&_sensitive_info_hunt">🔹Javascript recon & sensitive info hunt🔹</a> 
+
+### 🔹URLs crowl
+- [ ] katana
+```
+katana -list subdomains.txt \
+  -d 5 \
+  -jc -jsl -xhr \
+  -kf all \
+  -pc \
+  -td \
+  -c 20 -p 10 -rl 120 \
+  -ef png,jpg,jpeg,gif,svg,css,woff,woff2,ttf,ico \
+  -o katana_urls.txt
+```
+
+- [ ] gau
+```
+cat subdomains.txt | gau --blacklist png,jpg,jpeg,svg,css,woff,woff2,ttf,ico | tee gau_urls.txt
+```
+- [ ] waybackurls
+```
+cat subdomains.txt | waybackurls > wayback_urls.txt
+```
+
+- [ ] hakrawler
+```
+cat subdomains.txt | hakrawler \
+  -d 3 \
+  -subs \
+  -u \
+  -t 20 \
+> hakrawler_urls.txt
+```
+- [ ] gauplus
+```
+gauplus --random-agent -b ttf,woff,woff2,png,jpg,svg -t 20 subdomains.txt | anew gau_urls.txt
+```  
+```
+cat gau_urls.txt | grep -Ei '\.(js|php|json|env|ya?ml|ini|conf|xml)' \
+> .txt
+```
 ### 🔹Scanning  
 
 - [ ] Nmap scan   
